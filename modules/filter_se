@@ -1,0 +1,62 @@
+rule filter_alignment:
+    input: 
+        raw_bam = "mapped_reads/{sample}.raw.bam"
+    output:
+        flt_bam = "mapped_reads/{sample}.flt.bam",
+        tmp_bam = temp("mapped_reads/{sample}.tmp.bam"),
+        fix_bam = temp("mapped_reads/{sample}.fix.bam")
+    conda: "./chipseq.yaml"
+    params: 
+        prefix = "{sample}"
+    threads: 10
+    shell:
+        """
+        samtools view -@ {threads} -F 1804 -f 2 -q 30 -u {input.raw_bam} |
+        samtools sort  -@ {threads} -n -T {params.prefix} -o {output.tmp_bam} -
+        samtools fixmate -r {output.tmp_bam} {output.fix_bam}
+        samtools view -@ {threads} -F 1804 -f 2 -u {output.fix_bam} |
+        samtools sort -@ {threads} -T {params.prefix} -o {output.flt_bam} -
+        """
+    
+rule mark_duplicates:
+    input:
+        flt_bam = "mapped_reads/{sample}.flt.bam"
+    output:
+        dup_bam = "mapped_reads/{sample}.dup.bam",
+        qc = "qc/{sample}.pcrDups.txt"
+        
+    conda: "./chipseq.yaml"
+    threads: 1
+    shell:
+        """
+			  java -Xmx4G -jar ./picard.jar MarkDuplicates\
+			  INPUT={input.flt_bam} OUTPUT={output.dup_bam} \
+			  METRICS_FILE={output.qc} ASSUME_SORTED=true \
+			  VALIDATION_STRINGENCY=LENIENT REMOVE_DUPLICATES=false
+			  """
+             
+rule remove_duplicates:
+    input: "mapped_reads/{sample}.dup.bam"
+    output: 
+        final_bam = "mapped_reads/{sample}.final.bam",
+        final_bai = "mapped_reads/{sample}.final.bai"
+    conda: "./chipseq.yaml"
+    threads: 10
+    params:
+        prefix = "{sample}_final"
+    shell:
+        """
+        samtools view -@ {threads} -F 1804 -f 2 -b -o {output.final_bam} {input}
+        samtools index {output.final_bam} {output.final_bai}
+        """
+rule generate_bed:
+	  input: "mapped_reads/{sample}.final.bam"
+	  output: 
+		    bed = "bed_files/{sample}.bed.gz"
+	  threads: 
+	  shell:
+		    """
+		    bedtools bamtobed -i {input} | cut -f1-3 | \
+		    {config[sort]} --parallel={threads} -k1,1 -k2,2n | \
+        gzip -c > {output.bed} 
+		    """

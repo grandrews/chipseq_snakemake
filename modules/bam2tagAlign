@@ -1,0 +1,13 @@
+rule bam2tagAlign:
+    input: "mapped_reads/{sample}.final.bam"
+    output:
+        temp_tagAlign = temp("mapped_reads/{sample}.PE2SE.tagAlign"),
+        tagAlign = "mapped_reads/{sample}.PE2SE.tagAlign.gz"
+    threads: 4
+    conda: "./chipseq.yaml"
+    shell:
+        """
+		    bamToBed -i {input} | awk 'BEGIN{{OFS="\\t"}}{{$4="N";$5="1000";print $0}}' |\
+		    tee {output.temp_tagAlign} |\
+		    gzip -c > {output.tagAlign}
+		    """

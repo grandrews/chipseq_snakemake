@@ -1,0 +1,267 @@
+rule narrow_pooled_pr1:
+    input: 
+        ip = "bed_files/pooled_pr1.bed.gz",
+        ctrl = "bed_files/pooled_controls.bed.gz",
+        cc = expand("xcor/{sample}.cc_scores", sample = config["ips"])
+    output: 
+        narrowPeak_raw = temp("peaks/pooled_pr1_peaks.narrowPeak"),
+        sorted_narrowPeak = temp("peaks/pooled_pr1.sorted.narrowPeak"),
+        rescaled_narrowPeak = temp("peaks/pooled_pr1.rescaled.narrowPeak"),
+        narrowPeak = "peaks/pooled_pr1.narrowPeak",
+        narrowPeak_gz = "peaks/pooled_pr1.narrowPeak.gz",
+        treat_bedGraph = "peaks/pooled_pr1_treat_pileup.bdg",
+		    control_bedGraph = "peaks/pooled_pr1_control_lambda.bdg",
+		    checkpoint = "peaks/narrow_pooled_pr1.done"
+        
+    threads: 1
+    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    shell:
+        """
+        fraglen=$(cat {input.cc} | awk '{{ total += $3 }} END {{ printf "%.0f", total/NR }}')
+        macs2 callpeak -t {input.ip} -c {input.ctrl} -f BED -n peaks/pooled_pr1 \
+        -g {config[macs_g]} -p 1e-2 --nomodel --shift 0 --extsize $fraglen  --keep-dup \
+        all -B --SPMR
+        
+        sort -k 5gr,5gr peaks/pooled_pr1_peaks.narrowPeak |\
+		        awk 'BEGIN{{FS="\t";OFS="\t"}}{{if (NF != 0) print $0}}' > {output.sorted_narrowPeak}
+		    max=`head -n 1 {output.sorted_narrowPeak} | cut -f 5`
+		    min=`tail -n 1 {output.sorted_narrowPeak} | cut -f 5`
+		    cat {output.sorted_narrowPeak}|\
+		        awk -v min=$min -v max=$max 'BEGIN{{OFS="\t"}}{{n=$5;a=min;b=max;x=10;y=1000}}\
+		        {{$5=int(((n-a)*(y-x)/(b-a))+x) ; print $0}}' > {output.rescaled_narrowPeak}
+        
+        sort -k 8gr,8gr {output.rescaled_narrowPeak} | awk 'BEGIN{{OFS="\t"}}{{$4="Peak_"NR ; \
+       	    print $0}}' | tee {output.narrowPeak} | gzip -c > {output.narrowPeak_gz}
+        touch {output.checkpoint}
+        """
+        
+rule broad_pooled_pr1:
+    input: 
+        ip = "bed_files/pooled_pr1.bed.gz",
+        ctrl = "bed_files/pooled_controls.bed.gz",
+        cc = expand("xcor/{sample}.cc_scores", sample = config["ips"])
+    output:
+        broadPeak_raw = temp("peaks/pooled_pr1_peaks.broadPeak"),
+        gappedPeak_raw = temp("peaks/pooled_pr1_peaks.gappedPeak"),
+        sorted_broadPeak = temp("peaks/pooled_pr1.sorted.broadPeak"),
+        sorted_gappedPeak = temp("peaks/pooled_pr1.sorted.gappedPeak"),
+        rescaled_broadPeak = temp("peaks/pooled_pr1.rescaled.broadPeak"),
+        rescaled_gappedPeak = temp("peaks/pooled_pr1.gapped.broadPeak"),
+        broadPeak_gz = "peaks/pooled_pr1.broadPeak.gz",
+        gappedPeak_gz = "peaks/pooled_pr1.gappedPeak.gz"
+        
+    threads: 1
+    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    shell:
+        """
+        fraglen=$(cat {input.cc} | awk '{{ total += $3 }} END {{ printf "%.0f", total/NR }}')
+        macs2 callpeak -t {input.ip} -c {input.ctrl}\
+        -f BED -n peaks/pooled_pr1\
+        -g {config[macs_g]} -p 1e-2 --broad --nomodel --shift 0 --extsize $fraglen \
+        --keep-dup all 
+        
+        sort -k 5gr,5gr peaks/pooled_pr1_peaks.broadPeak |\
+		        awk 'BEGIN{{FS="\t";OFS="\t"}}{{if (NF != 0) print $0}}' > {output.sorted_broadPeak}
+		    max=`head -n 1 {output.sorted_broadPeak} | cut -f 5`
+		    min=`tail -n 1 {output.sorted_broadPeak} | cut -f 5`
+		    cat {output.sorted_broadPeak}|\
+		        awk -v min=$min -v max=$max 'BEGIN{{OFS="\t"}}{{n=$5;a=min;b=max;x=10;y=1000}}\
+		        {{$5=int(((n-a)*(y-x)/(b-a))+x) ; print $0}}' > {output.rescaled_broadPeak}
+        
+        sort -k 8gr,8gr {output.rescaled_broadPeak} | awk 'BEGIN{{OFS="\t"}}{{$4="Peak_"NR ; \
+       	    print $0}}' | gzip -nc > {output.broadPeak_gz}
+                
+        
+        sort -k 5gr,5gr peaks/pooled_pr1_peaks.gappedPeak |\
+		        awk 'BEGIN{{FS="\t";OFS="\t"}}{{if (NF != 0) print $0}}' > {output.sorted_gappedPeak}
+		    max=`head -n 1 {output.sorted_gappedPeak} | cut -f 5`
+		    min=`tail -n 1 {output.sorted_gappedPeak} | cut -f 5`
+		    cat {output.sorted_gappedPeak}|\
+		        awk -v min=$min -v max=$max 'BEGIN{{OFS="\t"}}{{n=$5;a=min;b=max;x=10;y=1000}}\
+		        {{$5=int(((n-a)*(y-x)/(b-a))+x) ; print $0}}' > {output.rescaled_gappedPeak}  
+                
+        sort -k 14gr,14gr {output.rescaled_gappedPeak} | awk 'BEGIN{{OFS="\t"}}{{$4="Peak_"NR ; print $0}}'| \
+		        gzip -nc > {output.gappedPeak_gz}
+        
+        
+        """
+
+rule macs_signal_tracks_pooled_pr1:
+    input:
+        checkpoint = "peaks/narrow_pooled_pr1.done",
+        control = "bed_files/pooled_controls.bed.gz",
+        ip = "bed_files/pooled_pr1.bed.gz",
+        treat_bedGraph = "peaks/pooled_pr1_treat_pileup.bdg",
+        control_bedGraph = "peaks/pooled_pr1_control_lambda.bdg"
+    output:
+        fe_bdg = temp("peaks/signals/pooled_pr1_FE.bdg"),
+        fc_signal_bdg = temp("peaks/signals/pooled_pr1.fc.signal.bedgraph"),
+        fc_signal = "peaks/signals/pooled_pr1.fc_signal.bw",
+        ppois = temp("peaks/signals/pooled_pr1_ppois.bdg"),
+        pval_bdg = temp("peaks/signals/pooled_pr1.pval.signal.bedgraph"),
+        pval = "peaks/signals/pooled_pr1.pval.signal.bw"
+    params:
+        prefix = "pooled_pr1"
+    threads: 1
+    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    shell:
+        """
+		    macs2 bdgcmp -t {input.treat_bedGraph} -c {input.control_bedGraph} \
+		    --outdir peaks/signals -o {params.prefix}_FE.bdg -m FE
+
+		    bedtools slop -i {output.fe_bdg} -g {config[chrom]} -b 0 |\
+		    awk '{{ if($3!=-1) print $0}}' | \
+		    {config[path]}bedClip stdin {config[chrom]} {output.fc_signal_bdg}
+
+
+		    {config[path]}bedGraphToBigWig {output.fc_signal_bdg} {config[chrom]} {output.fc_signal}
+
+
+		    chipReads=$(zcat {input.ip} | wc -l | awk '{{printf "%f", $1/1000000}}');
+		    controlReads=$(zcat {input.control} | wc -l | awk '{{printf "%f", $1/1000000}}');
+
+		    sval=$(echo "${{chipReads}} ${{controlReads}}" | awk '$1>$2{{printf "%f",$2}} $1<=$2{{printf "%f",$1}}');
+
+		    macs2 bdgcmp -t {input.treat_bedGraph} -c {input.control_bedGraph} --outdir peaks/signals -o {params.prefix}_ppois.bdg -m ppois -S ${{sval}}
+
+		    slopBed -i {output.ppois} -g {config[chrom]} -b 0 | \
+		    awk '{{if ($3 != -1) print $0}}' |  \
+		    {config[path]}bedClip stdin {config[chrom]} {output.pval_bdg}
+
+		    {config[path]}bedGraphToBigWig {output.pval_bdg} {config[chrom]} {output.pval}
+
+		    """
+
+rule narrow_pooled_pr2:
+    input: 
+        ip = "bed_files/pooled_pr2.bed.gz",
+        ctrl = "bed_files/pooled_controls.bed.gz",
+        cc = expand("xcor/{sample}.cc_scores", sample = config["ips"])
+    output: 
+        narrowPeak_raw = temp("peaks/pooled_pr2_peaks.narrowPeak"),
+        sorted_narrowPeak = temp("peaks/pooled_pr2.sorted.narrowPeak"),
+        rescaled_narrowPeak = temp("peaks/pooled_pr2.rescaled.narrowPeak"),
+        narrowPeak = "peaks/pooled_pr2.narrowPeak",
+        narrowPeak_gz = "peaks/pooled_pr2.narrowPeak.gz",
+        treat_bedGraph = "peaks/pooled_pr2_treat_pileup.bdg",
+		    control_bedGraph = "peaks/pooled_pr2_control_lambda.bdg",
+		    checkpoint = "peaks/narrow_pooled_pr2.done"
+        
+    threads: 1
+    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    shell:
+        """
+        fraglen=$(cat {input.cc} | awk '{{ total += $3 }} END {{ printf "%.0f", total/NR }}')
+        macs2 callpeak -t {input.ip} -c {input.ctrl} -f BED -n peaks/pooled_pr2 \
+        -g {config[macs_g]} -p 1e-2 --nomodel --shift 0 --extsize $fraglen \
+         --keep-dup all -B --SPMR
+        
+        sort -k 5gr,5gr peaks/pooled_pr2_peaks.narrowPeak |\
+		        awk 'BEGIN{{FS="\t";OFS="\t"}}{{if (NF != 0) print $0}}' > {output.sorted_narrowPeak}
+		    max=`head -n 1 {output.sorted_narrowPeak} | cut -f 5`
+		    min=`tail -n 1 {output.sorted_narrowPeak} | cut -f 5`
+		    cat {output.sorted_narrowPeak}|\
+		        awk -v min=$min -v max=$max 'BEGIN{{OFS="\t"}}{{n=$5;a=min;b=max;x=10;y=1000}}\
+		        {{$5=int(((n-a)*(y-x)/(b-a))+x) ; print $0}}' > {output.rescaled_narrowPeak}
+        
+        sort -k 8gr,8gr {output.rescaled_narrowPeak} | awk 'BEGIN{{OFS="\t"}}{{$4="Peak_"NR ; \
+       	    print $0}}' | tee {output.narrowPeak} | gzip -c > {output.narrowPeak_gz}
+        touch {output.checkpoint}
+        """
+        
+rule broad_pooled_pr2:
+    input: 
+        ip = "bed_files/pooled_pr2.bed.gz",
+        ctrl = "bed_files/pooled_controls.bed.gz",
+        cc = expand("xcor/{sample}.cc_scores", sample = config["ips"])
+    output:
+        broadPeak_raw = temp("peaks/pooled_pr2_peaks.broadPeak"),
+        gappedPeak_raw = temp("peaks/pooled_pr2_peaks.gappedPeak"),
+        sorted_broadPeak = temp("peaks/pooled_pr2.sorted.broadPeak"),
+        sorted_gappedPeak = temp("peaks/pooled_pr2.sorted.gappedPeak"),
+        rescaled_broadPeak = temp("peaks/pooled_pr2.rescaled.broadPeak"),
+        rescaled_gappedPeak = temp("peaks/pooled_pr2.gapped.broadPeak"),
+        broadPeak_gz = "peaks/pooled_pr2.broadPeak.gz",
+        gappedPeak_gz = "peaks/pooled_pr2.gappedPeak.gz"
+        
+    threads: 1
+    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    shell:
+        """
+        fraglen=$(cat {input.cc} | awk '{{ total += $3 }} END {{ printf "%.0f", total/NR }}')
+        macs2 callpeak -t {input.ip} -c {input.ctrl}\
+        -f BED -n peaks/pooled_pr2\
+        -g {config[macs_g]} -p 1e-2 --broad --nomodel --shift 0 --extsize $fraglen \
+        --keep-dup all 
+        
+        sort -k 5gr,5gr peaks/pooled_pr2_peaks.broadPeak |\
+		        awk 'BEGIN{{FS="\t";OFS="\t"}}{{if (NF != 0) print $0}}' > {output.sorted_broadPeak}
+		    max=`head -n 1 {output.sorted_broadPeak} | cut -f 5`
+		    min=`tail -n 1 {output.sorted_broadPeak} | cut -f 5`
+		    cat {output.sorted_broadPeak}|\
+		        awk -v min=$min -v max=$max 'BEGIN{{OFS="\t"}}{{n=$5;a=min;b=max;x=10;y=1000}}\
+		        {{$5=int(((n-a)*(y-x)/(b-a))+x) ; print $0}}' > {output.rescaled_broadPeak}
+        
+        sort -k 8gr,8gr {output.rescaled_broadPeak} | awk 'BEGIN{{OFS="\t"}}{{$4="Peak_"NR ; \
+       	    print $0}}' | gzip -nc > {output.broadPeak_gz}
+                
+        
+        sort -k 5gr,5gr peaks/pooled_pr2_peaks.gappedPeak |\
+		        awk 'BEGIN{{FS="\t";OFS="\t"}}{{if (NF != 0) print $0}}' > {output.sorted_gappedPeak}
+		    max=`head -n 1 {output.sorted_gappedPeak} | cut -f 5`
+		    min=`tail -n 1 {output.sorted_gappedPeak} | cut -f 5`
+		    cat {output.sorted_gappedPeak}|\
+		        awk -v min=$min -v max=$max 'BEGIN{{OFS="\t"}}{{n=$5;a=min;b=max;x=10;y=1000}}\
+		        {{$5=int(((n-a)*(y-x)/(b-a))+x) ; print $0}}' > {output.rescaled_gappedPeak}  
+                
+        sort -k 14gr,14gr {output.rescaled_gappedPeak} | awk 'BEGIN{{OFS="\t"}}{{$4="Peak_"NR ; print $0}}'| \
+		        gzip -nc > {output.gappedPeak_gz}
+        
+        
+        """
+
+rule macs_signal_tracks_pooled_pr2:
+    input:
+        checkpoint = "peaks/narrow_pooled_pr2.done",
+        control = "bed_files/pooled_controls.bed.gz",
+        ip = "bed_files/pooled_pr2.bed.gz",
+        treat_bedGraph = "peaks/pooled_pr2_treat_pileup.bdg",
+        control_bedGraph = "peaks/pooled_pr2_control_lambda.bdg"
+    output:
+        fe_bdg = temp("peaks/signals/pooled_pr2_FE.bdg"),
+        fc_signal_bdg = temp("peaks/signals/pooled_pr2.fc.signal.bedgraph"),
+        fc_signal = "peaks/signals/pooled_pr2.fc_signal.bw",
+        ppois = temp("peaks/signals/pooled_pr2_ppois.bdg"),
+        pval_bdg = temp("peaks/signals/pooled_pr2.pval.signal.bedgraph"),
+        pval = "peaks/signals/pooled_pr2.pval.signal.bw"
+    params:
+        prefix = "pooled_pr2"
+    threads: 1
+    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    shell:
+        """
+		    macs2 bdgcmp -t {input.treat_bedGraph} -c {input.control_bedGraph} \
+		    --outdir peaks/signals -o {params.prefix}_FE.bdg -m FE
+
+		    bedtools slop -i {output.fe_bdg} -g {config[chrom]} -b 0 |\
+		    awk '{{ if($3!=-1) print $0}}' | \
+		    {config[path]}bedClip stdin {config[chrom]} {output.fc_signal_bdg}
+
+
+		    {config[path]}bedGraphToBigWig {output.fc_signal_bdg} {config[chrom]} {output.fc_signal}
+
+
+		    chipReads=$(zcat {input.ip} | wc -l | awk '{{printf "%f", $1/1000000}}');
+		    controlReads=$(zcat {input.control} | wc -l | awk '{{printf "%f", $1/1000000}}');
+
+		    sval=$(echo "${{chipReads}} ${{controlReads}}" | awk '$1>$2{{printf "%f",$2}} $1<=$2{{printf "%f",$1}}');
+
+		    macs2 bdgcmp -t {input.treat_bedGraph} -c {input.control_bedGraph} --outdir peaks/signals -o {params.prefix}_ppois.bdg -m ppois -S ${{sval}}
+
+		    slopBed -i {output.ppois} -g {config[chrom]} -b 0 | \
+		    awk '{{if ($3 != -1) print $0}}' |  \
+		    {config[path]}bedClip stdin {config[chrom]} {output.pval_bdg}
+
+		    {config[path]}bedGraphToBigWig {output.pval_bdg} {config[chrom]} {output.pval}
+
+		    """

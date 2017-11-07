@@ -1,0 +1,37 @@
+rule pooling_control:
+	  input: expand("bed_files/{sample}.bed.gz", sample = config["controls"])
+	  output: "bed_files/pooled_controls.bed.gz"
+	  threads:4
+	  shell:
+		    """
+        zcat {input} | sort --parallel={threads} -k1,1 -k2,2n | gzip -c > {output}
+        """
+
+rule pooling_input:
+	  input: expand("bed_files/{sample}.bed.gz", sample = config["ips"])
+	  output: "bed_files/pooled_inputs.bed.gz"
+	  message: "Pooling inputs together"
+	  threads:4
+	  shell:
+		    """
+		    zcat {input} | {config[sort]} --parallel={threads} -k1,1 -k2,2n | gzip -c > {output}
+		    """
+
+rule pseudorepping_pooled:
+    input: expand("bed_files/{sample}.bed.gz", sample = config["ips"])
+    output: 
+        pooled_shuf = "bed_files/pooled_inputs.shuf",
+        temp_pr1 = "bed_files/pooled_pr.00.bed",
+        temp_pr2 = "bed_files/pooled_pr.01.bed",
+        pr1 = "bed_files/pooled_pr1.bed.gz",
+        pr2 = "bed_files/pooled_pr2.bed.gz"
+    threads:4
+    shell:
+        """
+        zcat {input} | shuf --random-source=<(zcat {input}) > {output.pooled_shuf}
+        split -d -nl/2 --additional-suffix=\".bed\" {output.pooled_shuf} bed_files/pooled_pr. 
+        sort --parallel={threads} -S 2G -k1,1 -k2,2n {output.temp_pr1} | \
+        gzip -c > {output.pr1}
+        sort --parallel={threads} -S 2G -k1,1 -k2,2n {output.temp_pr1} | \
+        gzip -c > {output.pr2}
+		    """

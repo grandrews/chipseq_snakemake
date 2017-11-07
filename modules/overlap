@@ -1,0 +1,99 @@
+rule overlap_narrow_pooled_pr:
+    input:
+        pooled_narrowPeak = "peaks/pooled.narrowPeak.gz",
+        pooled_pr1_narrowPeak = "peaks/pooled_pr1.narrowPeak.gz",
+        pooled_pr2_narrowPeak = "peaks/pooled_pr2.narrowPeak.gz"
+    output:
+        "peaks/pooled_pr_overlap.narrowPeak"
+    threads: 1
+    shell:
+        """
+        intersectBed -a {input.pooled_narrowPeak} -b {input.pooled_pr1_narrowPeak} \
+            {input.pooled_pr2_narrowPeak} -f 0.50 -F 0.50 -e -u > {output}
+        """
+        
+rule overlap_narrow_tr: 
+    input:
+        pooled_narrowPeak = "peaks/pooled.narrowPeak.gz",
+        tr_narrowPeak = expand("peaks/{sample}.narrowPeak.gz", sample = config["ips"])  
+    output:
+        "peaks/tr_overlap.narrowPeak"
+    shell:
+        """
+        intersectBed -a {input.pooled_narrowPeak} -b {input.tr_narrowPeak} \
+        -f 0.50 -F 0.50 -e -u > {output}
+        """
+
+rule overlap_broad_pooled_pr:
+    input:
+        pooled_broadPeak = "peaks/pooled.broadPeak.gz",
+        pooled_pr1_broadPeak = "peaks/pooled_pr1.broadPeak.gz",
+        pooled_pr2_broadPeak = "peaks/pooled_pr2.broadPeak.gz"
+    output:
+        "peaks/pooled_pr_overlap.broadPeak"
+    shell:
+        """
+        intersectBed -a {input.pooled_broadPeak} -b {input.pooled_pr1_broadPeak} \
+            {input.pooled_pr2_broadPeak} -f 0.50 -F 0.50 -e -u > {output}
+        """
+        
+rule overlap_broad_tr: 
+    input:
+        pooled_broadPeak = "peaks/pooled.broadPeak.gz",
+        tr_broadPeak = expand("peaks/{sample}.broadPeak.gz", sample = config["ips"])  
+    output:
+        "peaks/tr_overlap.broadPeak"
+    shell:
+        """
+        intersectBed -a {input.pooled_broadPeak} -b {input.tr_broadPeak} \
+        -f 0.50 -F 0.50 -e -u > {output}
+        """        
+rule overlap_gapped_pooled_pr:
+    input:
+        pooled_gappedPeak = "peaks/pooled.gappedPeak.gz",
+        pooled_pr1_gappedPeak = "peaks/pooled_pr1.gappedPeak.gz",
+        pooled_pr2_gappedPeak = "peaks/pooled_pr2.gappedPeak.gz"
+    output:
+        "peaks/pooled_pr_overlap.gappedPeak"
+    shell:
+        """
+        intersectBed -a {input.pooled_gappedPeak} -b {input.pooled_pr1_gappedPeak} \
+            {input.pooled_pr2_gappedPeak} -f 0.50 -F 0.50 -e -u > {output}
+        """
+        
+rule overlap_gapped_tr: 
+    input:
+        pooled_gappedPeak = "peaks/pooled.gappedPeak.gz",
+        tr_gappedPeak = expand("peaks/{sample}.gappedPeak.gz", sample = config["ips"])  
+    output:
+        "peaks/tr_overlap.gappedPeak"
+    shell:
+        """
+        intersectBed -a {input.pooled_gappedPeak} -b {input.tr_gappedPeak} \
+        -f 0.50 -F 0.50 -e -u > {output}
+        """        
+rule final_peaks:
+    input:
+        pr_narrow_overlap = "peaks/pooled_pr_overlap.narrowPeak",
+        tr_narrow_overlap = "peaks/tr_overlap.narrowPeak",
+        pr_broad_overlap = "peaks/pooled_pr_overlap.broadPeak",
+        tr_broad_overlap = "peaks/tr_overlap.broadPeak",
+        pr_gapped_overlap = "peaks/pooled_pr_overlap.gappedPeak",
+        tr_gapped_overlap = "peaks/tr_overlap.gappedPeak"
+    output:
+        final_narrowPeak = "peaks/final.narrowPeak",
+        final_broadPeak = "peaks/final.broadPeak",
+        final_gappedPeak = "peaks/final.gappedPeak",
+        narrowPeak_bb = "peaks/narrowPeak.bb",
+        broadPeak_bb = "peaks/broadPeak.bb",
+        gappedPeak_bb = "peaks/gappedPeak.bb"
+    threads: 1
+    shell:
+        """
+        cat {input.pr_narrow_overlap} {input.tr_narrow_overlap} | sort -k1,1 -k2,2n > {output.final_narrowPeak}
+        cat {input.pr_broad_overlap} {input.tr_broad_overlap} | sort -k1,1 -k2,2n > {output.final_broadPeak}
+        cat {input.pr_gapped_overlap} {input.tr_gapped_overlap} | sort -k1,1 -k2,2n > {output.final_gappedPeak}
+        {config[path]}/bedToBigBed -type='bed6+4' -as={config[path]}/narrowPeak.as {output.final_narrowPeak} {config[chrom]} {output.narrowPeak_bb}
+        {config[path]}/bedToBigBed -type='bed6+4' -as={config[path]}/broadPeak.as {output.final_broadPeak} {config[chrom]} {output.broadPeak_bb}
+        {config[path]}/bedToBigBed -type='bed6+4' -as={config[path]}/gappedPeak.as {output.final_gappedPeak} {config[chrom]} {output.gappedPeak_bb}
+        """
