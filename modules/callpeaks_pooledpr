@@ -14,7 +14,7 @@ rule narrow_pooled_pr1:
 		    checkpoint = "peaks/narrow_pooled_pr1.done"
         
     threads: 1
-    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    conda: "macs2.yaml"
     shell:
         """
         fraglen=$(cat {input.cc} | awk '{{ total += $3 }} END {{ printf "%.0f", total/NR }}')
@@ -51,7 +51,7 @@ rule broad_pooled_pr1:
         gappedPeak_gz = "peaks/pooled_pr1.gappedPeak.gz"
         
     threads: 1
-    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    conda: "macs2.yaml"
     shell:
         """
         fraglen=$(cat {input.cc} | awk '{{ total += $3 }} END {{ printf "%.0f", total/NR }}')
@@ -103,7 +103,7 @@ rule macs_signal_tracks_pooled_pr1:
     params:
         prefix = "pooled_pr1"
     threads: 1
-    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    conda: "macs2.yaml"
     shell:
         """
 		    macs2 bdgcmp -t {input.treat_bedGraph} -c {input.control_bedGraph} \
@@ -148,7 +148,7 @@ rule narrow_pooled_pr2:
 		    checkpoint = "peaks/narrow_pooled_pr2.done"
         
     threads: 1
-    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    conda: "macs2.yaml"
     shell:
         """
         fraglen=$(cat {input.cc} | awk '{{ total += $3 }} END {{ printf "%.0f", total/NR }}')
@@ -185,7 +185,7 @@ rule broad_pooled_pr2:
         gappedPeak_gz = "peaks/pooled_pr2.gappedPeak.gz"
         
     threads: 1
-    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    conda: "macs2.yaml"
     shell:
         """
         fraglen=$(cat {input.cc} | awk '{{ total += $3 }} END {{ printf "%.0f", total/NR }}')
@@ -237,7 +237,7 @@ rule macs_signal_tracks_pooled_pr2:
     params:
         prefix = "pooled_pr2"
     threads: 1
-    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    conda: "macs2.yaml"
     shell:
         """
 		    macs2 bdgcmp -t {input.treat_bedGraph} -c {input.control_bedGraph} \

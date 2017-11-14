@@ -12,7 +12,7 @@ rule narrow_tr:
         treat_bedGraph = "peaks/{sample,\w+}_treat_pileup.bdg",
 		    control_bedGraph = "peaks/{sample,\w+}_control_lambda.bdg",
 		    checkpoint = "peaks/narrow_{sample,\w+}.done"
-        
+    conda: "{config["path"]}/macs2.yaml"    
     threads: 1
     shell:
         """

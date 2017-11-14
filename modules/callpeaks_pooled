@@ -12,7 +12,7 @@ rule narrow_pooled:
         treat_bedGraph = "peaks/pooled_treat_pileup.bdg",
 		    control_bedGraph = "peaks/pooled_control_lambda.bdg",
 		    checkpoint = "peaks/narrow_pooled.done"
-    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"    
+    conda: "macs2.yaml"    
     threads: 1
     shell:
         """
@@ -50,6 +50,7 @@ rule broad_pooled:
         gappedPeak_gz = "peaks/pooled.gappedPeak.gz"
         
     threads: 1
+    conda: "macs2.yaml"
     shell:
         """
         fraglen=$(cat {input.cc} | awk '{{ total += $3 }} END {{ printf "%.0f", total/NR }}')
@@ -101,6 +102,7 @@ rule macs_signal_tracks_pooled:
     params:
         prefix = "pooled"
     threads: 1
+    conda: "macs2.yaml"
     shell:
         """
 		    macs2 bdgcmp -t {input.treat_bedGraph} -c {input.control_bedGraph} \

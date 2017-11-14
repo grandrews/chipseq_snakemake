@@ -5,7 +5,6 @@ rule filter_alignment:
         flt_bam = "mapped_reads/{sample}.flt.bam",
         tmp_bam = temp("mapped_reads/{sample}.tmp.bam"),
         fix_bam = temp("mapped_reads/{sample}.fix.bam")
-    conda: "./chipseq.yaml"
     params: 
         prefix = "{sample}"
     threads: 4
@@ -25,11 +24,10 @@ rule mark_duplicates:
         dup_bam = "mapped_reads/{sample}.dup.bam",
         qc = "qc/{sample}.pcrDups.txt"
         
-    conda: "./chipseq.yaml"
     threads: 1
     shell:
         """
-			  java -Xmx4G -jar ./picard.jar MarkDuplicates\
+			  java -Xmx4G -jar {config[path]}picard.jar MarkDuplicates\
 			  INPUT={input.flt_bam} OUTPUT={output.dup_bam} \
 			  METRICS_FILE={output.qc} ASSUME_SORTED=true \
 			  VALIDATION_STRINGENCY=LENIENT REMOVE_DUPLICATES=false
@@ -40,7 +38,6 @@ rule remove_duplicates:
     output: 
         final_bam = "mapped_reads/{sample}.final.bam",
         final_bai = "mapped_reads/{sample}.final.bai"
-    conda: "./chipseq.yaml"
     threads: 4
     params:
         prefix = "{sample}_final"
@@ -72,7 +69,7 @@ rule bed:
     shell:
         """
         zcat {input} | \
-        awk -f tagAlign.awk | \
+        awk 'BEGIN{{OFS="\t"}}{{printf "%s\t%s\t%s\tN\t1000\t%s\n%s\t%s\t%s\tN\t1000\t%s\n",$1,$2,$3,$9,$4,$5,$6,$10}}' | \
         sort --parallel={threads} -S 2G -k1,1 -k2,2n | \
         gzip -c > {output}
         """

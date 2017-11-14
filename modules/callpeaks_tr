@@ -14,7 +14,7 @@ rule narrow_tr:
 		    checkpoint = "peaks/narrow_{sample}.done"
         
     threads: 1
-    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    conda: "macs2.yaml"
     shell:
         """
         FRAGLEN=$(awk '{{print $3}}' {input.cc})
@@ -51,7 +51,7 @@ rule broad_tr:
         gappedPeak_gz = "peaks/{sample}.gappedPeak.gz"
         
     threads: 1
-    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    conda: "macs2.yaml"
     shell:
         """
         fraglen=`cat {input.cc}| cut -f3`
@@ -103,7 +103,7 @@ rule macs_signal_tracks:
     params:
         prefix = "{sample}"
     threads: 1
-    conda: "/data/zusers/andrewsg/ref_chipseq_snakemake/macs2.yaml"
+    conda: "macs2.yaml"
     shell:
         """
 		    macs2 bdgcmp -t {input.treat_bedGraph} -c {input.control_bedGraph} \

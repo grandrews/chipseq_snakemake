@@ -1,13 +1,13 @@
 rule align_se:
-     input: "reads/{sample}.fastq.gz"
-     output: "aln/{sample}.raw.bam"
+     input: "samples/{sample}.fastq.gz"
+     output: "mapped_reads/{sample}.raw.bam"
      threads: 10
      message: "aligning"
      params: 
         prefix = "{sample}"
      shell: 
          """
-         bwa mem -M -k 32 -t {threads} config["genome"] {input} | 
-         samtools view -@ {threads} -Su - | samtools sort -T {params.prefix} -@ {threads} -o {output.raw_bam}
+         bwa mem -M -k 32 -t {threads} {config[genome]} {input} | 
+         samtools view -@ {threads} -Su - | samtools sort -T {params.prefix} -@ {threads} -o {output}
          """
      
