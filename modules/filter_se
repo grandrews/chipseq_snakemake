@@ -21,7 +21,7 @@ rule mark_duplicates:
     threads: 1
     shell:
         """
-			  java -Xmx4G -jar ./picard.jar MarkDuplicates\
+			  java -Xmx4G -jar {config[path]}picard.jar MarkDuplicates\
 			  INPUT={input.flt_bam} OUTPUT={output.dup_bam} \
 			  METRICS_FILE={output.qc} ASSUME_SORTED=true \
 			  VALIDATION_STRINGENCY=LENIENT REMOVE_DUPLICATES=false
