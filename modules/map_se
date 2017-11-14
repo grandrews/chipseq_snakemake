@@ -2,7 +2,6 @@ rule align_se:
      input: "samples/{sample}.fastq.gz"
      output: "mapped_reads/{sample}.raw.bam"
      threads: 10
-     message: "aligning"
      params: 
         prefix = "{sample}"
      shell: 
