@@ -23,6 +23,7 @@ if config["paired"]:
     include: "modules/overlap"
 
 else:
+    include: "modules/trim_se"
     include: "modules/map_se"
     include: "modules/filter_se"
     include: "modules/xcor_se"
