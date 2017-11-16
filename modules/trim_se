@@ -1,0 +1,11 @@
+rule trim_se:
+     input: "samples/{sample}.raw.fastq.gz"
+     output: "samples/{sample}.fastq.gz"
+     threads: 10
+     shell: 
+         """
+         java -jar trimmomatic-0.35.jar SE -phred33 -threads {threads} \
+         {input} {output} LEADING:3 TRAILING:3 \ 
+         SLIDINGWINDOW:4:15 MINLEN:36
+         """
+     
