@@ -35,6 +35,7 @@ rule overlap_broad_pooled_pr:
         """
         intersectBed -a {input.pooled_broadPeak} -b {input.pooled_pr1_broadPeak} \
             {input.pooled_pr2_broadPeak} -f 0.50 -F 0.50 -e -u > {output}
+        sleep 120
         """
         
 rule overlap_broad_tr: 
@@ -71,6 +72,7 @@ rule overlap_gapped_tr:
         """
         intersectBed -a {input.pooled_gappedPeak} -b {input.tr_gappedPeak} \
         -f 0.50 -F 0.50 -e -u > {output}
+        sleep 120
         """        
 rule final_peaks:
     input:

@@ -9,7 +9,7 @@ paired: false
 genome: /data/zusers/andrewsg/genome/hg19/hg19
 chrom: /data/zusers/andrewsg/genome/hg19/hg19.chrom.sizes
 sponge_flag: false
-path: /data/zusers/andrewsg/ref_chipseq_snakemake/common/
+path: /data/zusers/andrewsg/chipseq_snakemake/common/
 macs_g: hs
 matching: false
 sort: sort #or path to the update version

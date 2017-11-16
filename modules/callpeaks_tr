@@ -2,7 +2,7 @@ rule narrow_tr:
     input: 
         ip = "bed_files/{sample}.bed.gz",
         ctrl = "bed_files/pooled_controls.bed.gz",
-        cc = "xcor/{sample}.cc_scores"
+        cc = "xcor/{sample}.cc_score"
     output: 
         narrowPeak_raw = temp("peaks/{sample}_peaks.narrowPeak"),
         sorted_narrowPeak = temp("peaks/{sample}.sorted.narrowPeak"),
@@ -39,7 +39,7 @@ rule broad_tr:
     input: 
         ip = "bed_files/{sample}.bed.gz",
         ctrl = "bed_files/pooled_controls.bed.gz",
-        cc = "xcor/{sample}.cc_scores"
+        cc = "xcor/{sample}.cc_score"
     output:
         broadPeak_raw = temp("peaks/{sample}_peaks.broadPeak"),
         gappedPeak_raw = temp("peaks/{sample}_peaks.gappedPeak"),

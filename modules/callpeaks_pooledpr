@@ -2,7 +2,7 @@ rule narrow_pooled_pr1:
     input: 
         ip = "bed_files/pooled_pr1.bed.gz",
         ctrl = "bed_files/pooled_controls.bed.gz",
-        cc = expand("xcor/{sample}.cc_scores", sample = config["ips"])
+        cc = expand("xcor/{sample}.cc_score", sample = config["ips"])
     output: 
         narrowPeak_raw = temp("peaks/pooled_pr1_peaks.narrowPeak"),
         sorted_narrowPeak = temp("peaks/pooled_pr1.sorted.narrowPeak"),
@@ -39,7 +39,7 @@ rule broad_pooled_pr1:
     input: 
         ip = "bed_files/pooled_pr1.bed.gz",
         ctrl = "bed_files/pooled_controls.bed.gz",
-        cc = expand("xcor/{sample}.cc_scores", sample = config["ips"])
+        cc = expand("xcor/{sample}.cc_score", sample = config["ips"])
     output:
         broadPeak_raw = temp("peaks/pooled_pr1_peaks.broadPeak"),
         gappedPeak_raw = temp("peaks/pooled_pr1_peaks.gappedPeak"),
@@ -136,7 +136,7 @@ rule narrow_pooled_pr2:
     input: 
         ip = "bed_files/pooled_pr2.bed.gz",
         ctrl = "bed_files/pooled_controls.bed.gz",
-        cc = expand("xcor/{sample}.cc_scores", sample = config["ips"])
+        cc = expand("xcor/{sample}.cc_score", sample = config["ips"])
     output: 
         narrowPeak_raw = temp("peaks/pooled_pr2_peaks.narrowPeak"),
         sorted_narrowPeak = temp("peaks/pooled_pr2.sorted.narrowPeak"),
@@ -173,7 +173,7 @@ rule broad_pooled_pr2:
     input: 
         ip = "bed_files/pooled_pr2.bed.gz",
         ctrl = "bed_files/pooled_controls.bed.gz",
-        cc = expand("xcor/{sample}.cc_scores", sample = config["ips"])
+        cc = expand("xcor/{sample}.cc_score", sample = config["ips"])
     output:
         broadPeak_raw = temp("peaks/pooled_pr2_peaks.broadPeak"),
         gappedPeak_raw = temp("peaks/pooled_pr2_peaks.gappedPeak"),
