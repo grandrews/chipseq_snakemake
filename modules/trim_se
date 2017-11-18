@@ -5,7 +5,6 @@ rule trim_se:
      shell: 
          """
          java -jar {config[path]}trimmomatic-0.36.jar SE -phred33 -threads {threads} \
-         {input} {output} LEADING:3 TRAILING:3 \ 
-         SLIDINGWINDOW:4:15 MINLEN:36
+         {input} {output} LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
          """
      
