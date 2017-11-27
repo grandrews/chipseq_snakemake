@@ -10,7 +10,7 @@ ALL_BED = expand("bed_files/{sample}.bed.gz", sample=ALL_SAMPLES)
 CC_SCORE = expand("xcor/{sample}.cc_score", sample=ALL_SAMPLES)
 
 rule all:
-    input: ALL_FINAL_BAM + ALL_BED + CC_SCORE
+    input: ALL_FINAL_BAM + ALL_BED
 
 if config["paired"]:
     include: "modules/map_pe"
