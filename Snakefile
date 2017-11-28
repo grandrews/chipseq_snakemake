@@ -3,14 +3,19 @@ shell.prefix("set -eo pipefail; ")
 configfile: "config.yaml"
 localrules: all
 
+wildcard_constraints:
+    sample= "(input|control)(\d+)"
+  
+
 IPS = config["ips"]
 ALL_SAMPLES = config["ips"] + config["controls"]
+ALL_FASTQ = expand("samples/{sample}.fastq.gz", sample=ALL_SAMPLES)
 ALL_FINAL_BAM = expand("mapped_reads/{sample}.final.bam", sample=ALL_SAMPLES)
 ALL_BED = expand("bed_files/{sample}.bed.gz", sample=ALL_SAMPLES)
 CC_SCORE = expand("xcor/{sample}.cc_score", sample=ALL_SAMPLES)
 
 rule all:
-    input: ALL_FINAL_BAM + ALL_BED
+    input: ALL_FASTQ + ALL_FINAL_BAM + ALL_BED
 
 if config["paired"]:
     include: "modules/map_pe"
