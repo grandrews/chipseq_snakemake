@@ -1,16 +1,15 @@
 ---
 ips:
- - input1 #prefix original file name input1.R1.fastq.gz input1.R2.fastq.gz
- - input2
+ - input1
 controls:
  - control1
 
 paired: false
-genome: /data/zusers/andrewsg/genome/hg19/hg19
-chrom: /data/zusers/andrewsg/genome/hg19/hg19.chrom.sizes
+genome: /data/zusers/andrewsg/genome/mm10/mm10
+chrom: /data/zusers/andrewsg/genome/mm10/mm10.chrom.sizes
 sponge_flag: false
 path: /data/zusers/andrewsg/chipseq_snakemake/common/
-macs_g: hs
+macs_g: mm
 matching: false
 sort: sort #or path to the update version
 split: split #or path to the update version
