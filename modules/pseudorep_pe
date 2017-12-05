@@ -30,7 +30,7 @@ rule pooling_control:
         """
 
 rule pooling_input:
-	  input: expand("bed_files/{sample}.bed.gz", sample = config["ips"])
+	  input: expand("bed_files/{sample}.bed.gz", sample = IPS)
 	  output: "bed_files/pooled_inputs.bed.gz"
 	  message: "Pooling inputs together"
 	  threads:4
@@ -40,7 +40,7 @@ rule pooling_input:
 		    """
 
 rule pseudorepping_pooled:
-    input: expand("bed_files/{sample}.bedpe.gz", sample = config["ips"])
+    input: expand("bed_files/{sample}.bedpe.gz", sample = IPS)
     output: 
         pooled_shuf = "bed_files/pooled_inputs.shuf",
         temp_pr1 = "bed_files/pooled_pr.00.bedpe",
