@@ -1,21 +1,9 @@
 ---
-controls:
- - control1
-cell_types:
- - NCC_progenitors
- - FNP
- - Mx
- - Md
- - PA2
-marks:
- - H3K4me2
- - H3K27me3 
-
 paired: false
 genome: /data/zusers/andrewsg/genome/mm10/mm10
 chrom: /data/zusers/andrewsg/genome/mm10/mm10.chrom.sizes
 sponge_flag: false
-path: /data/zusers/andrewsg/chipseq_snakemake/common/
+path: ./common/
 macs_g: mm
 matching: false
 sort: sort #or path to the update version
