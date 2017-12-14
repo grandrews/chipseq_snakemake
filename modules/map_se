@@ -1,5 +1,5 @@
 rule align_se:
-     input: "samples/{sample}.fastq.gz"
+     input: "samples/{sample}.trimmed.fastq.gz"
      output: "mapped_reads/{sample}.raw.bam"
      threads: 10
      params: 

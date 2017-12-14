@@ -1,6 +1,6 @@
 rule trim_se:
-     input: "samples/{sample}.raw.fastq.gz"
-     output: "samples/{sample}.fastq.gz"
+     input: "samples/{sample}.fastq.gz"
+     output: "samples/{sample}.trimmed.fastq.gz"
      threads: 4
      shell: 
          """
