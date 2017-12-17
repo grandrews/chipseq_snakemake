@@ -45,7 +45,7 @@ rule remove_duplicates:
         samtools index {output.final_bam} {output.final_bai}
         """
 rule generate_bed:
-	  input: "mapped_reads/{sample}.final.bam"
-	  output: "bed_files/{sample}.bed.gz"
+    input: "mapped_reads/{sample}.final.bam"
+	  output: "bed_files/{sample}.bed.gz", "xcor/{sample}.tagAlign"
 	  threads: 4
-	  shell: """ bedtools bamtobed -i {input} | awk '{{OFS="\t"; $4="N"; $5="1000"; print $0}}' | sort --parallel={threads} -k1,1 -k2,2n | gzip -c > {output} """
+	  shell: """bedtools bamtobed -i {input} | awk '{{OFS="\t"; $4="N"; $5="1000"; print $0}}' | sort --parallel={threads} -k1,1 -k2,2n | tee {output[1]} | gzip -c > {output[0]}"""

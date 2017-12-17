@@ -1,18 +1,18 @@
 rule spp:
 	  input: 
-		    tagAlign = "bed_files/{sample}.bed.gz"
+		    temp_tagAlign = "xcor/{sample}.tagAlign"
 	  output:
-		    subsample = "xcor/{sample}.subsample.SE.tagAlign",
-		    cc_score = "xcor/{sample}.cc_score", 
-		    temp_cc_score = temp("xcor/{sample}.subsample.SE.tagAlign.cc.qc.tmp"),
-		    cc_plot = "xcor/{sample}.subsample.SE.tagAlign.cc.plot.pdf"
+		    subsample = "xcor/{sample}.sample.tagAlign",
+		    cc_score = "xcor/{sample}.cc", 
+		    temp_cc_score = temp("xcor/{sample}.cc.tmp"),
+		    cc_plot = "xcor/{sample}.cc.plot.pdf"
 	  threads: 4	
 	  shell:
 		    """
-		    zcat {input.tagAlign} | grep -v 'chrM' |\
+		    grep -v 'chrM' {input.temp_tagAlign} | \
 		    shuf -n 15000000  > {output.subsample} 
 		
 		    Rscript {config[path]}/run_spp_nodups.R -c={output.subsample} -p={threads} -filtchr=chrM -savp={output.cc_plot} -out={output.cc_score} > /dev/null 2>&1
-     	  sed -r  's/,[^\\t]+//g' {output.cc_score} > {output.temp_cc_score} 
+        	sed -r  's/,[^\\t]+//g' {output.cc_score} > {output.temp_cc_score} 
 		    cp {output.temp_cc_score} {output.cc_score}		
-		    """
+		"""
