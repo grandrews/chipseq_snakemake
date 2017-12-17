@@ -16,7 +16,8 @@ ALL_FINAL_BAM = expand("mapped_reads/{sample}.final.bam", sample=SAMPLES)
 #CC_SCORE = expand("xcor/{sample}.cc_score", sample=SAMPLES)
 
 rule all:
-    input: ALL_FASTQ + ALL_FINAL_BAM
+    input: 
+        expand("samples/{sample}.trimmed.fastq.gz", sample=SAMPLES)
     
 
 if config["paired"]:
@@ -33,9 +34,5 @@ else:
     include: "modules/trim_se"
     include: "modules/map_se"
     include: "modules/filter_se"
-    #include: "modules/xcor_se"
-    #include: "modules/pseudorep_se"
-    #include: "modules/callpeaks_tr"
-    #include: "modules/callpeaks_pooled"
-    #include: "modules/callpeaks_pooledpr"
-    #include: "modules/overlap"
+    include: "modules/xcor_se"
+    include: "modules/callpeaks_se"
