@@ -12,12 +12,14 @@ SAMPLES = [sample.replace('samples/','') for sample in SAMPLES]
 
 ALL_FASTQ = expand("samples/{sample}.fastq.gz", sample=SAMPLES)
 ALL_FINAL_BAM = expand("mapped_reads/{sample}.final.bam", sample=SAMPLES)
-#ALL_BED = expand("bed_files/{sample}.bed.gz", sample=SAMPLES)
-#CC_SCORE = expand("xcor/{sample}.cc_score", sample=SAMPLES)
+ALL_BED = expand("bed_files/{sample}.bed.gz", sample=SAMPLES)
+CC_SCORE = expand("xcor/{sample}.cc", sample=SAMPLES)
+ALL_NARROW_PEAK = expand("peaks/{sample}.narrowPeak.gz", sample=SAMPLES)
+ALL_BROAD_PEAK = expand("peaks/{sample}.broadPeak.gz", sample=SAMPLES)
 
 rule all:
     input: 
-        expand("samples/{sample}.trimmed.fastq.gz", sample=SAMPLES)
+        ALL_BED + CC_SCORE + ALL_BROAD_PEAK
     
 
 if config["paired"]:
@@ -35,4 +37,4 @@ else:
     include: "modules/map_se"
     include: "modules/filter_se"
     include: "modules/xcor_se"
-    include: "modules/callpeaks_se"
+    include: "modules/peakcalling_se"
